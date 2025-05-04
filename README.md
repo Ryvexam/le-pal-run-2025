@@ -12,11 +12,11 @@ Application Streamlit pour analyser les résultats de courses.
 
 ## Prérequis
 
-- Docker installé sur votre machine
+- Docker et Docker Compose installés sur votre machine
 
 ## Installation et Lancement
 
-### Localement
+### Avec Docker Compose (Recommandé)
 
 1. Cloner le dépôt :
 ```bash
@@ -24,18 +24,30 @@ git clone <url-du-depot>
 cd <nom-du-depot>
 ```
 
-2. Construire l'image Docker :
+2. Lancer l'application :
+```bash
+docker-compose up -d
+```
+
+3. Accéder à l'application :
+Ouvrez votre navigateur et allez à l'adresse : http://localhost:8501
+
+4. Arrêter l'application :
+```bash
+docker-compose down
+```
+
+### Manuellement avec Docker
+
+1. Construire l'image Docker :
 ```bash
 docker build -t course-analyzer .
 ```
 
-3. Lancer le conteneur :
+2. Lancer le conteneur :
 ```bash
 docker run -p 8501:8501 course-analyzer
 ```
-
-4. Accéder à l'application :
-Ouvrez votre navigateur et allez à l'adresse : http://localhost:8501
 
 ### Depuis Docker Hub
 
@@ -61,6 +73,7 @@ Le workflow se déclenchera automatiquement à chaque push sur la branche main.
 - `app.py` : Application Streamlit principale
 - `requirements.txt` : Dépendances Python
 - `Dockerfile` : Configuration Docker
+- `docker-compose.yml` : Configuration Docker Compose
 - `.github/workflows/docker-publish.yml` : Configuration du déploiement automatique
 - `race_data.json` : Cache des données de course
 
@@ -73,4 +86,5 @@ Le workflow se déclenchera automatiquement à chaque push sur la branche main.
 ## Notes
 
 - Les données sont mises en cache localement pour éviter de surcharger l'API
-- L'application met à jour automatiquement les données si nécessaire 
+- L'application met à jour automatiquement les données si nécessaire
+- Le fichier `race_data.json` est monté en volume pour persister les données entre les redémarrages 
