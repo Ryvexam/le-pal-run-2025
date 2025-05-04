@@ -7,7 +7,7 @@ import json
 import os
 from pathlib import Path
 from typing import Dict, Any, Optional
-
+from fetch_data import fetch_results
 # Configuration de la page
 st.set_page_config(
     layout="wide",
@@ -20,110 +20,6 @@ CACHE_FILE = "race_data.json"
 MIN_PARTICIPANTS_FOR_STATS = 5
 API_TIMEOUT = 10  # secondes
 
-def save_data_to_json(data: Dict[str, Any], filename: str = CACHE_FILE) -> None:
-    """Sauvegarder la réponse de l'API dans un fichier JSON"""
-    try:
-        with open(filename, 'w', encoding='utf-8') as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-    except Exception as e:
-        st.error(f"Erreur lors de la sauvegarde des données: {str(e)}")
-
-def load_data_from_json(filename: str = CACHE_FILE) -> Optional[Dict[str, Any]]:
-    """Charger les données depuis le fichier JSON s'il existe"""
-    try:
-        if os.path.exists(filename):
-            with open(filename, 'r', encoding='utf-8') as f:
-                return json.load(f)
-    except Exception as e:
-        st.error(f"Erreur lors du chargement des données: {str(e)}")
-    return None
-
-def fetch_results(checkpoint_id: int = 2191864) -> Dict[str, Any]:
-    """Récupérer les résultats depuis l'API ou le cache"""
-    try:
-        # Essayer de charger depuis le cache d'abord
-        cached_data = load_data_from_json()
-        if cached_data:
-            return cached_data
-
-        # Configuration de la requête
-        url = "https://api.resultats-live.com/graphql"
-        headers = {
-            "Accept": "*/*",
-            "Accept-Encoding": "gzip, deflate, br, zstd",
-            "Accept-Language": "en-US,en;q=0.5",
-            "Content-Type": "application/json",
-            "Host": "api.resultats-live.com",
-            "Origin": "https://live.run-athle-03.fr",
-            "Referer": "https://live.run-athle-03.fr/",
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:138.0) Gecko/20100101 Firefox/138.0"
-        }
-
-        query = """
-        query getResults($checkpointId: Int!, $category: String, $gender: String, $search: String, $limit: Int, $offset: Int) {
-          totalResults: resultsByCheckpointIdCount(
-            id: $checkpointId
-            category: $category
-            gender: $gender
-          )
-          results: resultsByCheckpointId(
-            id: $checkpointId
-            category: $category
-            gender: $gender
-            search: $search
-            limit: $limit
-            offset: $offset
-          ) {
-            id
-            time
-            ranking
-            gender_ranking
-            category_ranking
-            checkpoint_id
-            participant {
-              id
-              firstname
-              lastname
-              birthdate
-              gender
-              country
-              club
-              category
-              category_shortname
-              bib_number
-              __typename
-            }
-            __typename
-          }
-        }
-        """
-
-        variables = {
-            "checkpointId": checkpoint_id,
-            "category": None,
-            "gender": None,
-            "limit": 3000,
-            "offset": 0
-        }
-
-        payload = {
-            "operationName": "getResults",
-            "variables": variables,
-            "query": query
-        }
-
-        # Faire la requête avec timeout
-        response = requests.post(url, headers=headers, json=payload, timeout=API_TIMEOUT)
-        response.raise_for_status()
-        data = response.json()
-        
-        # Sauvegarder les données
-        save_data_to_json(data)
-        return data
-
-    except requests.exceptions.RequestException as e:
-        st.error(f"Erreur lors de la récupération des données: {str(e)}")
-        return load_data_from_json() or {"data": {"results": []}}
 
 def format_timedelta(td: timedelta) -> str:
     """Formater un timedelta en HH:MM:SS"""
