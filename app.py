@@ -1,5 +1,4 @@
 import streamlit as st
-import requests
 import pandas as pd
 import plotly.express as px
 from datetime import datetime, timedelta
@@ -7,7 +6,7 @@ import json
 import os
 from pathlib import Path
 from typing import Dict, Any, Optional
-from fetch_data import fetch_results
+
 # Configuration de la page
 st.set_page_config(
     layout="wide",
@@ -20,6 +19,14 @@ CACHE_FILE = "race_data.json"
 MIN_PARTICIPANTS_FOR_STATS = 5
 API_TIMEOUT = 10  # secondes
 
+def load_race_data() -> Dict[str, Any]:
+    """Load race data from cache"""
+    try:
+        with open(CACHE_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except Exception as e:
+        st.error(f"Erreur lors de la lecture du fichier de données: {str(e)}")
+        return None
 
 def format_timedelta(td: timedelta) -> str:
     """Formater un timedelta en HH:MM:SS"""
@@ -129,7 +136,10 @@ def main():
     st.title("🏃 Analyse des Résultats de Course")
     
     # Récupérer les données
-    data = fetch_results()
+    data = load_race_data()
+    if data is None:
+        return
+    
     df = process_results(data)
     
     if df.empty:

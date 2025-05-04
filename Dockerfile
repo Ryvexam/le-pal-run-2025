@@ -11,9 +11,18 @@ RUN apt-get update && apt-get install -y \
 # Copier les fichiers de l'application
 COPY requirements.txt .
 COPY app.py .
+COPY fetch_data.py .
 
 # Installer les dépendances Python
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Récupérer les données pendant le build
+RUN python fetch_data.py && \
+    # Vérifier que le fichier JSON a été créé
+    test -f race_data.json || (echo "Erreur: race_data.json n'a pas été créé" && exit 1)
+
+# Copier le fichier JSON généré
+COPY race_data.json .
 
 # Exposer le port utilisé par Streamlit
 EXPOSE 8501
